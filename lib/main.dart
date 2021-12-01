@@ -24,6 +24,22 @@ Future<bool> loginToWIFI(String username, String password) async {
   return false;
 }
 
+Future<bool> logoutOfWifi() async {
+  try {
+    http.Response resp = await _get(LOGOUT_URL);
+    String? loc = resp.headers['Location'];
+    if (loc != null) return !(loc.startsWith('gateway.example.com/loginpages/autologout.shtml'));
+    return false;
+  } on http.ClientException {
+  } catch (e) {
+  }
+  return false;
+}
+
+Future<http.Response> _get(String url) {
+  return http.get(Uri.parse(url));
+}
+
 Future<http.Response> _post(String url, Map<String, dynamic> body) {
   return http.post(Uri.parse(url), body: body);
 }
@@ -63,7 +79,14 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _passwordController =
       TextEditingController(text: _defaultPassword);
   final ButtonStyle btnStyle = ElevatedButton.styleFrom(
+      primary: Colors.blue,
       textStyle: const TextStyle(fontSize: 24.0, letterSpacing: 0.8),
+      padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 8.0),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(50))));
+  final ButtonStyle dangerousBtnStyle = ElevatedButton.styleFrom(
+    primary: Colors.red,
+    textStyle: const TextStyle(fontSize: 24.0, letterSpacing: 0.8),
       padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 8.0),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50))));
@@ -99,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         _buildTips(),
         _buildConnect(),
-        _buildMainButton(context),
+        _buildLoginLogoutButtons(context),
       ],
     );
   }
@@ -152,7 +175,21 @@ class _MyHomePageState extends State<MyHomePage> {
         ]);
   }
 
-  Widget _buildMainButton(BuildContext ctx) {
+  Widget _buildLoginLogoutButtons(BuildContext ctx) {
+    return Container(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildLoginButton(ctx),
+            _buildLogoutButton(ctx)
+          ]
+        )
+      )
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext ctx) {
     return Container(
         child: Center(
             child: ElevatedButton(
@@ -162,7 +199,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (success) _showSnackBar(ctx, 'Success');
                   else _showSnackBar(ctx, 'Try Again.');
                 },
-                child: const MyText('Start'))));
+                // This is main button. Its width should be bigger.
+                child: const MyText('  Start  ')))); 
+  }
+
+  Widget _buildLogoutButton(BuildContext ctx) {
+    return Container(
+        child: Center(
+            child: ElevatedButton(
+                style: dangerousBtnStyle,
+                onPressed: () async {
+                  bool success = await logoutOfWifi();
+                  if (success) _showSnackBar(ctx, 'Success');
+                  else _showSnackBar(ctx, 'Try Again.');
+                },
+                child: const MyText('Logout'))));
   }
 
   void _showSnackBar(BuildContext ctx, String msg) {
