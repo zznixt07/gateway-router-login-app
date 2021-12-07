@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 //const String LOGOUT_URL = 'http://1.1.1.1';
 const String LOGOUT_URL =
@@ -65,16 +66,20 @@ class MyText extends Text {
 
 class _MyHomePageState extends State<MyHomePage> {
   static const String _defaultSSID = 'STW_CU';
-  static const String _defaultUsername = 'softwarica';
-  static const String _defaultPassword = 'cov3ntry123';
+  //static const String _defaultUsername = 'softwarica';
+  //static const String _defaultPassword = 'cov3ntry123';
+  // these are used as key for k-v db store.
+  static const usernameFieldLabel = 'Username';
+  static const passwordFieldLabel = 'Password';
   // Set(LinkedHashSet) is used cuz to prevent dupe & keep insertion order when iterating.
   final LinkedHashSet<String> _usernames =
-      LinkedHashSet.from([_defaultUsername]);
+      LinkedHashSet.from(LocalStore.getList('_${usernameFieldLabel}') ?? []);
   final LinkedHashSet<String> _passwords =
-      LinkedHashSet.from(['cov3ntry123', 'c0v3ntry']);
+      LinkedHashSet.from(LocalStore.getList('_${passwordFieldLabel}') ?? []);
   //String _ssid = _defaultSSID;
   //String _username = _defaultUsername;
   //String _password = _defaultPassword;
+
   final TextEditingController _ssidController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -162,10 +167,10 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
               margin: const EdgeInsets.all(textFieldMargin),
               child: _buildChipsAndTextField(
-                  _usernames, 'Username', _usernameController)),
+                  _usernames, usernameFieldLabel, _usernameController)),
           Container(
               margin: const EdgeInsets.all(textFieldMargin),
-              child: _buildChipsAndTextField(_passwords, 'Password', _passwordController)
+              child: _buildChipsAndTextField(_passwords, passwordFieldLabel, _passwordController)
               )
         ]);
   }
@@ -187,7 +192,6 @@ class _MyHomePageState extends State<MyHomePage> {
           chips.remove(text);
         });
       },
-      //padding: const EdgeInsets.all(0.0),
     );
   }
 
@@ -198,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
         decoration: InputDecoration(
           //border: const OutlineInputBorder(),
           //constraints: const BoxConstraints(maxHeight: 30),
-          contentPadding: const EdgeInsets.all(10.0),
+          contentPadding: const EdgeInsets.all(5.0),
           label: Text(label),
         ),
         // not used cuz it would require having textFieldWidthFactor for each fields.
@@ -233,6 +237,9 @@ class _MyHomePageState extends State<MyHomePage> {
       // set keeps the order same in case of adding duplicate items. favors us.
       widgets.add(_textChip(text, chips));
     }
+
+    // update db everytime this widget renders.
+    LocalStore.setList('_${textFieldLabel}', chips.toList());
 
     // then add the text-field.
     widgets.add(_textField(textFieldLabel, controller, chips));
@@ -288,6 +295,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-void main() {
+
+class LocalStore {
+  static const ukey = 'fast_gateway_login';
+  static SharedPreferences? _prefs;
+
+  static init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+  
+  static setList(String key, List<String> val) {
+    _prefs?.setStringList(ukey + key, val);
+    print('setting list: ${val}');
+  }
+
+  static List<String>? getList(String key) {
+    print('getting list with key: ${ukey + key}');
+    return _prefs?.getStringList(ukey + key);
+  }
+
+}
+
+Future<void> main() async {
+  // SharedPreferences fails without this.
+  WidgetsFlutterBinding.ensureInitialized();
+  // init key-value db before running app.
+  await LocalStore.init();
   runApp(const MyApp());
 }
