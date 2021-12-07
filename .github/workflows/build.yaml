@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build APK
+    name: Build Android App
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -23,17 +23,17 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Static analysis.
-        run: flutter analyze .
+      # - name: Static analysis.
+      #   run: flutter analyze .
 
       - name: Run tests
         run: flutter test
 
-      - name: Build Android App
+      - name: Build apk
         run: flutter build apk
 
-      # Upload generated apk to the artifacts.
-      - uses: actions/upload-artifact@v2
+      - name: Upload apk
+        uses: actions/upload-artifact@v2
         with:
           name: release-apk
           path: build/app/outputs/apk/release/connstw-release.apk
