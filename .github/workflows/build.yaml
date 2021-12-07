@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build Android App
+    name: Build App
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
