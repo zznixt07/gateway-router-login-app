@@ -87,13 +87,13 @@ class _MyHomePageState extends State<MyHomePage> {
   final ButtonStyle btnStyle = ElevatedButton.styleFrom(
       primary: Colors.blue,
       textStyle: const TextStyle(fontSize: 24.0, letterSpacing: 0.8),
-      padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 10.0),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50))));
   final ButtonStyle dangerousBtnStyle = ElevatedButton.styleFrom(
       primary: Colors.red,
       textStyle: const TextStyle(fontSize: 24.0, letterSpacing: 0.8),
-      padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 10.0),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50))));
 
@@ -122,12 +122,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    return Container(
+    return SingleChildScrollView(
         //padding: EdgeInsets.symmetric(vertical: 50.0),
-        child: SingleChildScrollView(
-            // takes as less space as possible
+        child: Container(
             child: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTips(),
@@ -138,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildTips() => Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20.0),
+      margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
       child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +147,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const MyText('1. Connect to Wi-Fi.')),
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const MyText('2. Click Start Button at the end.')),
+                child: const MyText('2. Click Login Button.')),
           ]));
 
   Widget _buildConnect() {
@@ -162,7 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   decoration: const InputDecoration(
                     //border: OutlineInputBorder(),
                     contentPadding: const EdgeInsets.all(10.0),
-                    labelText: "Wi-Fi Name",
+                    labelText: "Wi-Fi Name (Optional)",
                   ))),
           Container(
               margin: const EdgeInsets.all(textFieldMargin),
@@ -170,13 +169,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   _usernames, usernameFieldLabel, _usernameController)),
           Container(
               margin: const EdgeInsets.all(textFieldMargin),
-              child: _buildChipsAndTextField(_passwords, passwordFieldLabel, _passwordController)
-              )
+              child: _buildChipsAndTextField(
+                  _passwords, passwordFieldLabel, _passwordController))
         ]);
   }
 
   Widget _buildLoginLogoutButtons(BuildContext ctx) {
     return Container(
+        margin: const EdgeInsets.symmetric(vertical: 30.0),
         child: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -196,7 +196,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   /* for both username and password fields */
-  Widget _textField(String label, TextEditingController fieldController, LinkedHashSet<String> chips) {
+  Widget _textField(String label, TextEditingController fieldController,
+      LinkedHashSet<String> chips) {
     return TextField(
         controller: fieldController,
         decoration: InputDecoration(
@@ -253,29 +254,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildLoginButton(BuildContext ctx) {
     return Container(
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
         child: Center(
             child: ElevatedButton(
                 style: btnStyle,
                 onPressed: () async {
-                  outer: for (String username in _usernames) {
+                  outer:
+                  for (String username in _usernames) {
                     for (String password in _passwords) {
                       bool success = await loginToWIFI(username, password);
                       if (success) {
                         _showSnackBar(ctx, 'Success');
                         break outer; // break outer loop which breaks both loops.
-                      }
-                      else
+                      } else
                         _showSnackBar(ctx, 'Try Again.');
                     }
-
                   }
                 },
                 // This is main button. Its width should be bigger.
-                child: const MyText('  Start  '))));
+                child: const MyText('  Login  '))));
   }
 
   Widget _buildLogoutButton(BuildContext ctx) {
     return Container(
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
         child: Center(
             child: ElevatedButton(
                 style: dangerousBtnStyle,
@@ -295,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-
 class LocalStore {
   static const ukey = 'fast_gateway_login';
   static SharedPreferences? _prefs;
@@ -303,7 +304,7 @@ class LocalStore {
   static init() async {
     _prefs = await SharedPreferences.getInstance();
   }
-  
+
   static setList(String key, List<String> val) {
     _prefs?.setStringList(ukey + key, val);
     print('setting list: ${val}');
@@ -313,7 +314,6 @@ class LocalStore {
     print('getting list with key: ${ukey + key}');
     return _prefs?.getStringList(ukey + key);
   }
-
 }
 
 Future<void> main() async {
