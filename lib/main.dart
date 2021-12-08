@@ -10,6 +10,7 @@ const String URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
 const Map<String, String> PARAMS = {'accesscode': '', 'vlan_id': '106'};
 
 Future<bool> loginToWIFI(String username, String password) async {
+  print('Trying ${username}, ${password} ');
   Map<String, String> params = {
     ...PARAMS,
     ...{'username': username, 'password': password}
@@ -27,6 +28,7 @@ Future<bool> loginToWIFI(String username, String password) async {
 Future<bool> logoutOfWifi() async {
   try {
     http.Response resp = await _get(LOGOUT_URL);
+    print('${resp.headers}\n${resp.isRedirect}\n${resp.statusCode}');
     String? loc = resp.headers['Location'];
     if (loc != null)
       return !(loc
@@ -262,6 +264,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   outer:
                   for (String username in _usernames) {
                     for (String password in _passwords) {
+                      // snackbar is slow
+                      //_showSnackBar(ctx, 'Trying ${username}, ${password} ');
                       bool success = await loginToWIFI(username, password);
                       if (success) {
                         _showSnackBar(ctx, 'Success');
@@ -282,6 +286,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: ElevatedButton(
                 style: dangerousBtnStyle,
                 onPressed: () async {
+                  print('logging out');
                   bool success = await logoutOfWifi();
                   if (success)
                     _showSnackBar(ctx, 'Success');
