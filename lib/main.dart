@@ -68,8 +68,6 @@ class MyText extends Text {
 
 class _MyHomePageState extends State<MyHomePage> {
   static const String _defaultSSID = 'STW_CU';
-  //static const String _defaultUsername = 'softwarica';
-  //static const String _defaultPassword = 'cov3ntry123';
   // these are used as key for k-v db store.
   static const usernameFieldLabel = 'Username';
   static const passwordFieldLabel = 'Password';
@@ -146,10 +144,11 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const MyText('1. Connect to Wi-Fi.')),
+                child: const MyText('Connect to Wi-Fi first.')),
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const MyText('2. Click Login Button.')),
+                child: const Text('Press ok on keyboard after typing credentials.')),
+            
           ]));
 
   Widget _buildConnect() {
