@@ -144,11 +144,10 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const MyText('Connect to Wi-Fi first.')),
+                child: const MyText('First, Connect to Wi-Fi.')),
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const Text('Press ok on keyboard after typing credentials.')),
-            
+                child: const Text('Text fields support multiple values.')),
           ]));
 
   Widget _buildConnect() {
@@ -200,15 +199,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _textField(String label, TextEditingController fieldController,
       LinkedHashSet<String> chips) {
     return TextField(
-        controller: fieldController,
-        decoration: InputDecoration(
-          //border: const OutlineInputBorder(),
-          //constraints: const BoxConstraints(maxHeight: 30),
-          contentPadding: const EdgeInsets.all(5.0),
-          label: Text(label),
-        ),
-        // not used cuz it would require having textFieldWidthFactor for each fields.
-        /* 
+      controller: fieldController,
+      decoration: InputDecoration(
+        //border: const OutlineInputBorder(),
+        //constraints: const BoxConstraints(maxHeight: 30),
+        contentPadding: const EdgeInsets.all(5.0),
+        label: Text(label),
+      ),
+      // not used cuz it would require having textFieldWidthFactor for each fields.
+      /* 
         onChanged: (String text) {
           int len = text.characters.length;
           double widthFactor = (len / 40.0);
@@ -223,12 +222,14 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
         */
-        onSubmitted: (String text) {
-          setState(() {
-            chips.add(text);
-            fieldController.text = '';
-          });
+      onSubmitted: (String text) {
+        setState(() {
+          chips.add(text);
+          // set field to blank text
+          fieldController.text = '';
         });
+      },
+    );
   }
 
   Widget _buildChipsAndTextField(LinkedHashSet<String> chips,
@@ -260,6 +261,21 @@ class _MyHomePageState extends State<MyHomePage> {
             child: ElevatedButton(
                 style: btnStyle,
                 onPressed: () async {
+                  // check if input cred fields have any texts. if it has, add it to chips.
+                  if (_usernameController.text != '') {
+                    setState(() {
+                      _usernames.add(_usernameController.text);
+                      // dont erase text.
+                    });
+                  }
+
+                  // repeat above for password field.
+                  if (_passwordController.text != '') {
+                    setState(() {
+                      _passwords.add(_passwordController.text);
+                    });
+                  }        
+
                   outer:
                   for (String username in _usernames) {
                     for (String password in _passwords) {
