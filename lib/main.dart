@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 //const String LOGOUT_URL = 'http://1.1.1.1';
 const String LOGOUT_URL =
@@ -52,7 +53,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'Connect STW', home: MyHomePage());
+    return MaterialApp(title: 'Quick Connect', home: MyHomePage());
   }
 }
 
@@ -67,7 +68,6 @@ class MyText extends Text {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static const String _defaultSSID = 'STW_CU';
   // these are used as key for k-v db store.
   static const usernameFieldLabel = 'Username';
   static const passwordFieldLabel = 'Password';
@@ -76,11 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
       LinkedHashSet.from(LocalStore.getList('_${usernameFieldLabel}') ?? []);
   final LinkedHashSet<String> _passwords =
       LinkedHashSet.from(LocalStore.getList('_${passwordFieldLabel}') ?? []);
-  //String _ssid = _defaultSSID;
-  //String _username = _defaultUsername;
-  //String _password = _defaultPassword;
 
-  final TextEditingController _ssidController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   static const double textFieldMargin = 15.0;
@@ -96,18 +92,19 @@ class _MyHomePageState extends State<MyHomePage> {
       padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 10.0),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50))));
+  final ButtonStyle bwBtnStyle = ElevatedButton.styleFrom(
+    primary: Colors.black
+  );
 
   @override
   void initState() {
     super.initState();
-    _ssidController.addListener(() {});
     _usernameController.addListener(() {});
     _passwordController.addListener(() {});
   }
 
   @override
   void dispose() {
-    _ssidController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -116,7 +113,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const MyText('FSL')),
+      appBar: AppBar(
+        title: const MyText('🚀...'),
+        backgroundColor: Colors.black,
+      ),
       body: _buildBody(context),
     );
   }
@@ -130,39 +130,38 @@ class _MyHomePageState extends State<MyHomePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTips(),
-        _buildConnect(),
+        _buildConnect(context),
         _buildLoginLogoutButtons(context),
       ],
     )));
   }
 
   Widget _buildTips() => Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+      margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
       child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: const MyText('First, Connect to Wi-Fi.')),
+                child: const MyText('Fast Gateway Login.')),
             Container(
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
                 child: const Text('Text fields support multiple values.')),
+            Container(
+              //margin: const EdgeInsets.all(textFieldMargin),
+              child: ElevatedButton(
+                  style: bwBtnStyle,
+                  child: const Text('Enable Wifi'),
+                  onPressed: () async {
+                    await WiFiForIoTPlugin.setEnabled(true);
+                  })),
           ]));
 
-  Widget _buildConnect() {
+  Widget _buildConnect(BuildContext ctx) {
     return Column(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-              margin: const EdgeInsets.all(textFieldMargin),
-              child: TextField(
-                  controller: _ssidController,
-                  decoration: const InputDecoration(
-                    //border: OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.all(10.0),
-                    labelText: "Wi-Fi Name (Optional)",
-                  ))),
           Container(
               margin: const EdgeInsets.all(textFieldMargin),
               child: _buildChipsAndTextField(
@@ -206,22 +205,6 @@ class _MyHomePageState extends State<MyHomePage> {
         contentPadding: const EdgeInsets.all(5.0),
         label: Text(label),
       ),
-      // not used cuz it would require having textFieldWidthFactor for each fields.
-      /* 
-        onChanged: (String text) {
-          int len = text.characters.length;
-          double widthFactor = (len / 40.0);
-          // field width will not increase if its below a certain threshold.
-          // and after expanding width will not decrease again.
-          if (widthFactor < textFieldWidthFactor) return;
-          if (widthFactor > 1.0) {
-            widthFactor = 1.0;
-          }
-          setState(() {
-            textFieldWidthFactor = widthFactor;
-          });
-        },
-        */
       onSubmitted: (String text) {
         setState(() {
           chips.add(text);
@@ -274,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       _passwords.add(_passwordController.text);
                     });
-                  }        
+                  }
 
                   outer:
                   for (String username in _usernames) {
@@ -323,6 +306,16 @@ class LocalStore {
 
   static init() async {
     _prefs = await SharedPreferences.getInstance();
+  }
+
+  static setString(String key, String val) {
+    _prefs?.setString(ukey + key, val);
+    print('setting string: ${val}');
+  }
+
+  static String? getString(String key) {
+    print('getting string with key: ${ukey + key}');
+    return _prefs?.getString(ukey + key);
   }
 
   static setList(String key, List<String> val) {

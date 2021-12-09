@@ -4,5 +4,4 @@ Smart App.
 ## Login to gateway.example.com
 
 # TODOs
-> Auto-Connect to WiFI.
-> ?handle empty fields
+- ~~Auto-Connect to WiFI~~ (disconnects automatically on app close. use native.)
