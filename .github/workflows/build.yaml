@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Android App
+    name: Build App
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build iOS App
         run: |
-            flutter build ios --nocodesign
+            flutter build ios --no-codesign
             cd build/ios/iphoneos
             mkdir Payload
             cd Payload
