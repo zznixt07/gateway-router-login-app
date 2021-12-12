@@ -104,7 +104,7 @@ jobs:
           artifacts: |
                     build/app/outputs/apk/release/*.apk
                     build/ios/iphoneos/app.ipa
-                    build/windows/runner/Release/*
+                    build/windows/runner/windows_executable.zip
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
