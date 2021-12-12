@@ -98,6 +98,11 @@ jobs:
           name: bins
           path: build # download to ./build/
 
+      - name: Echo download path
+        run: |
+              echo ${{steps.downID.outputs.download-path}}
+              ls -aFR
+
       - name: Push artificats to Releases
         uses: ncipollo/release-action@v1
         with:
