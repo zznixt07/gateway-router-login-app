@@ -18,15 +18,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup flutter env
+      - name: Setup stable flutter env
+        if: ${{ runner.os != 'Windows' }}
         uses: subosito/flutter-action@v1
         with:
           flutter-version: '2.x'
-          if: ${{ runner.os != 'Windows' }}
-            channel: 'stable'
-          if: ${{ runner.os == 'Windows' }}
-            channel: 'beta'
+          channel: 'stable'
 
+      - name: Setup beta flutter env (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '2.x'
+          channel: 'beta'
 
       - name: Install Dependencies
         run: flutter pub get
