@@ -75,10 +75,6 @@ jobs:
       #   if: ${{ runner.os == 'macOS' }}
       #   uses: ncipollo/release-action@v1
       #   with:
-      #     artifacts: |
-      #               build/app/outputs/apk/release/*.apk
-      #               build/ios/iphoneos/app.ipa
-      #               build/windows/runner/Release/*
 
   release:
     runs-on: ubuntu-latest
@@ -94,7 +90,10 @@ jobs:
       - name: Push artificats to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "downloaded-bins/*"
+          artifacts: |
+                    downloaded-bins/build/app/outputs/apk/release/*.apk
+                    downloaded-bins/build/ios/iphoneos/app.ipa
+                    downloaded-bins/build/windows/runner/Release/*
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
