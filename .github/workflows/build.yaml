@@ -57,11 +57,12 @@ jobs:
             cd ..
             zip -r app.ipa Payload
 
-      - name: Build windows app
+      - name: Build windows app and zip it.
         if: ${{ runner.os == 'Windows' }}
         run: |
             flutter config --enable-windows-desktop
             flutter build windows
+            tar -a -c -f windows_executable.zip build/windows/runner/Release
       
       - name: Upload APK
         if: ${{ runner.os == 'Linux' }}
@@ -81,7 +82,6 @@ jobs:
       
       - name: Upload windows executable bundle
         if: ${{ runner.os == 'Windows' }}
-        run: tar -a -c -f windows_executable.zip build/windows/runner/Release
         uses: actions/upload-artifact@v2
         with:
           name: bins
