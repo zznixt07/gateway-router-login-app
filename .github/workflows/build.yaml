@@ -83,17 +83,24 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: actions/download-artifact@v2
+        id: downID
         with:
           name: bins
           path: downloaded-bins
 
+      - name: Echo download path
+        run: |
+              echo ${{steps.downID.outputs.download-path}}
+              ls -aFR
+
       - name: Push artificats to Releases
         uses: ncipollo/release-action@v1
+        working-directory: downloaded-bins
         with:
           artifacts: |
-                    downloaded-bins/build/app/outputs/apk/release/*.apk
-                    downloaded-bins/build/ios/iphoneos/app.ipa
-                    downloaded-bins/build/windows/runner/Release/*
+                    build/app/outputs/apk/release/*.apk
+                    build/ios/iphoneos/app.ipa
+                    build/windows/runner/Release/*
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
