@@ -99,14 +99,12 @@ jobs:
           path: build # download to ./build/
 
       - name: Echo download path
-        run: |
-              echo ${{steps.downID.outputs.download-path}}
-              ls -aFR
+        run: ls build/ -aFR
 
       - name: Push artificats to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: build/*
+          artifacts: "build/*"
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
