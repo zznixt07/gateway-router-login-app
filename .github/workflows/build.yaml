@@ -9,16 +9,17 @@ on:
 
 jobs:
   build:
-    name: Build App
-    runs-on: macos-latest
     strategy:
       fail-fast: false
+      matrix:
+        os: [macOS-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v2
 
-      # setup flutter env
-      - uses: subosito/flutter-action@v1
+      - name: Setup flutter env
+        uses: subosito/flutter-action@v1
         with:
           flutter-version: '2.x'
           channel: 'stable'
@@ -33,15 +34,11 @@ jobs:
       #   run: flutter test
 
       - name: Build apk
+        if: ${{ runner.os == 'macOS' }}
         run: flutter build apk
 
-      - name: Upload apk
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-apk
-          path: build/app/outputs/apk/release/app-release.apk
-
       - name: Build iOS App
+        if: ${{ runner.os == 'macOS' }}
         run: |
             flutter build ios --no-codesign
             cd build/ios/iphoneos
@@ -51,8 +48,46 @@ jobs:
             cd ..
             zip -r app.ipa Payload
 
+      - name: Build windows app
+        if: ${{ runner.os == 'Windows' }}
+        run: flutter config --enable-windows-desktop
+        run: flutter build windows
+      
+      - name: Upload apk, ipa, exe
+        uses: actions/upload-artifact@v2
+        with:
+          name: bins
+          path: |
+                build/app/outputs/apk/release/*.apk
+                build/ios/iphoneos/app.ipa
+                build/windows/runner/Release/*
+
+      # - name: Push apk, ipa to Releases
+      #   if: ${{ runner.os == 'macOS' }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: |
+      #               build/app/outputs/apk/release/*.apk
+      #               build/ios/iphoneos/app.ipa
+      #               build/windows/runner/Release/*
+
+  release:
+    depends: build
+    # if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: bins
+          path: downloaded-bins
+
       - name: Push apk, ipa to Releases
+        if: ${{ runner.os == 'macOS' }}
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/*.apk,build/ios/iphoneos/app.ipa"
+          artifacts: "downloaded-bins/*"
           token: ${{ secrets.GITHUB_TOKEN }}
+
+
+      
