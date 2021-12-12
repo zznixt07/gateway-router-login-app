@@ -86,7 +86,7 @@ jobs:
         id: downID
         with:
           name: bins
-          path: downloaded-bins
+          path: build
 
       - name: Echo download path
         run: |
@@ -97,9 +97,9 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-                    bins/build/app/outputs/apk/release/*.apk
-                    bins/build/ios/iphoneos/app.ipa
-                    bins/build/windows/runner/Release/*
+                    build/app/outputs/apk/release/*.apk
+                    build/ios/iphoneos/app.ipa
+                    build/windows/runner/Release/*
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
