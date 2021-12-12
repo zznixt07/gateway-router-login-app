@@ -95,12 +95,11 @@ jobs:
 
       - name: Push artificats to Releases
         uses: ncipollo/release-action@v1
-        working-directory: downloaded-bins
         with:
           artifacts: |
-                    build/app/outputs/apk/release/*.apk
-                    build/ios/iphoneos/app.ipa
-                    build/windows/runner/Release/*
+                    bins/build/app/outputs/apk/release/*.apk
+                    bins/build/ios/iphoneos/app.ipa
+                    bins/build/windows/runner/Release/*
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
