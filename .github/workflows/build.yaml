@@ -62,7 +62,8 @@ jobs:
         run: |
             flutter config --enable-windows-desktop
             flutter build windows
-            tar -a -c -f build/windows/runner/windows_executable.zip build/windows/runner/Release
+            cd build/windows/runner
+            tar -a -c -f windows_executable.zip Release
       
       - name: Upload APK
         if: ${{ runner.os == 'Linux' }}
