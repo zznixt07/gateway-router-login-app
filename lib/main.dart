@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,6 +11,74 @@ const String LOGOUT_URL =
     'http://gateway.example.com/loginpages/autologout.shtml';
 const String URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
 const Map<String, String> PARAMS = {'accesscode': '', 'vlan_id': '106'};
+
+
+class Session {
+  HttpClient client = new HttpClient();
+  Map<String, String> headers = {};
+
+  Session({Map<String, String>? headers = null}) {
+    if (headers != null) {
+      this.headers = {...this.headers, ...headers};
+    }
+  }
+
+  void close() {
+    client.close();
+  }
+
+  Future<HttpClientResponse> get(String url) async {
+    // warning: always read the returned response or .drain() to prevent memory leaks.
+    HttpClientRequest request = await client.getUrl(Uri.parse(url));
+    headers.forEach((String name, String value) {
+      request.headers.set(name, value);
+    });
+    // send the request and wait for a response
+    HttpClientResponse response = await request.close();
+    return response;
+  }
+
+  Future<String> getAndText(String url) async {
+    String body = '';
+    HttpClientResponse response = await get(url);
+    await response
+        .transform(utf8.decoder)
+        .listen((String contents) => body = contents)
+        .asFuture();
+    return body;
+  }
+
+  Future<HttpClientResponse> post(String url,
+      {Map<String, String>? body: null}) async {
+    // warning: always read the returned response or .drain() to prevent memory leaks.
+    HttpClientRequest request = await client.postUrl(Uri.parse(url));
+    headers.forEach((String name, String value) {
+      request.headers.set(name, value);
+    });
+    request.headers.set(HttpHeaders.contentTypeHeader, 'x-www-form-urlencoded');
+    // write body
+    List<String> forms = [];
+    if (body != null)
+      body.forEach((String k, String v) =>
+          forms.add(Uri.encodeComponent(k) + '=' + Uri.encodeComponent(v)));
+    request.write(forms.join('&'));
+    // send the request and wait for a response
+    HttpClientResponse response = await request.close();
+    return response;
+  }
+
+  Future<String> postAndText(String url,
+      {Map<String, String>? body: null}) async {
+    String responseBody = '';
+    HttpClientResponse response = await post(url, body: body);
+    await response
+        .transform(utf8.decoder)
+        .listen((String contents) => responseBody = contents)
+        .asFuture();
+    return responseBody;
+  }
+
+}
 
 Future<bool> loginToWIFI(String username, String password) async {
   print('Trying ${username}, ${password} ');
