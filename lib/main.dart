@@ -132,6 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _buildTips(),
         _buildConnect(context),
         _buildLoginLogoutButtons(context),
+        //_buildOutputText(),
       ],
     )));
   }
@@ -262,14 +263,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   outer:
                   for (String username in _usernames) {
                     for (String password in _passwords) {
-                      // snackbar is slow
-                      //_showSnackBar(ctx, 'Trying ${username}, ${password} ');
+                      String info = 'Trying ${username}, ${password} : ';
+                      //_showSnackBar(ctx, info);
                       bool success = await loginToWIFI(username, password);
                       if (success) {
-                        _showSnackBar(ctx, 'Success');
+                        _showSnackBar(ctx, info+'Success');
                         break outer; // break outer loop which breaks both loops.
                       } else
-                        _showSnackBar(ctx, 'Try Again.');
+                        _showSnackBar(ctx, info+'Error');
                     }
                   }
                 },
@@ -294,9 +295,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const MyText('Logout'))));
   }
 
+  //Widget _buildOutputText() {
+  //  return 
+  //}
+
   void _showSnackBar(BuildContext ctx, String msg) {
     final scaffold = ScaffoldMessenger.of(ctx);
-    scaffold.showSnackBar(SnackBar(content: Text(msg)));
+    scaffold.showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 1)));
   }
 }
 
