@@ -117,8 +117,8 @@ Future<bool> logoutOfWifi() async {
 
     for (RedirectInfo redirect in resp.redirects) {
       String locHeader = redirect.location.toString();
-      if (locHeader.startsWith('gateway.example.com/loginpages/autologout.shtml'))
-        return true;
+      if (locHeader.startsWith(
+          'gateway.example.com/loginpages/autologout.shtml')) return true;
     }
     return true;
   } catch (e) {}
@@ -340,14 +340,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   outer:
                   for (String username in _usernames) {
                     for (String password in _passwords) {
-                      String info = 'Trying ${username}, ${password} : ';
+                      String info = 'Trying ${username}, ${password}';
                       //_showSnackBar(ctx, info);
                       bool success = await loginToWIFI(username, password);
                       if (success) {
-                        _showSnackBar(ctx, info + 'Success');
+                        _showSnackBar(ctx, 'Success: ${info}',
+                            bgcolor: Colors.green.shade900);
                         break outer; // break outer loop which breaks both loops.
                       } else
-                        _showSnackBar(ctx, info + 'Error');
+                        _showSnackBar(ctx, 'Error: ${info}', bgcolor: Colors.grey.shade900);
                     }
                   }
                 },
@@ -365,9 +366,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   print('logging out');
                   bool success = await logoutOfWifi();
                   if (success)
-                    _showSnackBar(ctx, 'Success');
+                    _showSnackBar(ctx, 'Logout Success', bgcolor: Colors.green.shade900);
                   else
-                    _showSnackBar(ctx, 'Try Again.');
+                    _showSnackBar(ctx, 'Logout failed', bgcolor: Colors.grey.shade900);
                 },
                 child: const MyText('Logout'))));
   }
@@ -376,10 +377,13 @@ class _MyHomePageState extends State<MyHomePage> {
   //  return
   //}
 
-  void _showSnackBar(BuildContext ctx, String msg) {
+  void _showSnackBar(BuildContext ctx, String msg,
+      {Color bgcolor = Colors.transparent}) {
     final scaffold = ScaffoldMessenger.of(ctx);
-    scaffold.showSnackBar(
-        SnackBar(content: Text(msg), duration: const Duration(seconds: 1)));
+    scaffold.showSnackBar(SnackBar(
+        backgroundColor: bgcolor,
+        content: Text(msg),
+        duration: const Duration(seconds: 1)));
   }
 }
 
