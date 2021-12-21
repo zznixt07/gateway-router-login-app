@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:collection';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
@@ -12,9 +11,12 @@ const String LOGOUT_URL =
 const String URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
 const Map<String, String> PARAMS = {'accesscode': '', 'vlan_id': '106'};
 
+/* used builtin class instead of lib:http.dart cuz it doesn't provide history of
+  redirects. Location header is used to figure out whether the login/logout was
+  successful or not.*/
 
 class Session {
-  HttpClient client = new HttpClient();
+  HttpClient client = HttpClient();
   Map<String, String> headers = {};
 
   Session({Map<String, String>? headers = null}) {
@@ -23,8 +25,9 @@ class Session {
     }
   }
 
-  void close() {
-    client.close();
+  void close([HttpClientResponse? response]) {
+    client.close(force: true);
+    response?.drain();
   }
 
   Future<HttpClientResponse> get(String url) async {
@@ -77,7 +80,6 @@ class Session {
         .asFuture();
     return responseBody;
   }
-
 }
 
 Future<bool> loginToWIFI(String username, String password) async {
@@ -87,35 +89,40 @@ Future<bool> loginToWIFI(String username, String password) async {
     ...{'username': username, 'password': password}
   };
   try {
-    http.Response resp = await _post(URL, params);
-    String? loc = resp.headers['location'];
-    if (loc != null) return !(loc.startsWith('error_user.shtml'));
-    return false;
-  } on http.ClientException {
+    Session sess = Session();
+    HttpClientResponse? resp;
+    try {
+      resp = await sess.post(URL, body: params);
+    } finally {
+      sess.close(resp);
+    }
+    for (RedirectInfo redirect in resp.redirects) {
+      String locHeader = redirect.location.toString();
+      if (locHeader.startsWith('error_user.shtml')) return false;
+    }
+    return true;
   } catch (e) {}
   return false;
 }
 
 Future<bool> logoutOfWifi() async {
   try {
-    http.Response resp = await _get(LOGOUT_URL);
-    print('${resp.headers}\n${resp.isRedirect}\n${resp.statusCode}');
-    String? loc = resp.headers['Location'];
-    if (loc != null)
-      return !(loc
-          .startsWith('gateway.example.com/loginpages/autologout.shtml'));
-    return false;
-  } on http.ClientException {
+    Session sess = Session();
+    HttpClientResponse? resp;
+    try {
+      resp = await sess.get(LOGOUT_URL);
+    } finally {
+      sess.close(resp);
+    }
+
+    for (RedirectInfo redirect in resp.redirects) {
+      String locHeader = redirect.location.toString();
+      if (locHeader.startsWith('gateway.example.com/loginpages/autologout.shtml'))
+        return true;
+    }
+    return true;
   } catch (e) {}
   return false;
-}
-
-Future<http.Response> _get(String url) {
-  return http.get(Uri.parse(url));
-}
-
-Future<http.Response> _post(String url, Map<String, dynamic> body) {
-  return http.post(Uri.parse(url), body: body);
 }
 
 class MyApp extends StatelessWidget {
@@ -162,9 +169,8 @@ class _MyHomePageState extends State<MyHomePage> {
       padding: EdgeInsets.symmetric(horizontal: 46.0, vertical: 10.0),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(50))));
-  final ButtonStyle bwBtnStyle = ElevatedButton.styleFrom(
-    primary: Colors.black
-  );
+  final ButtonStyle bwBtnStyle =
+      ElevatedButton.styleFrom(primary: Colors.black);
 
   @override
   void initState() {
@@ -220,17 +226,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 margin: const EdgeInsets.symmetric(vertical: 6.0),
                 child: const Text('Text fields support multiple values.')),
             Container(
-              //margin: const EdgeInsets.all(textFieldMargin),
-              child: ElevatedButton(
-                  style: bwBtnStyle,
-                  child: const Text('Enable Wifi'),
-                  onPressed: () async {
-                    await WiFiForIoTPlugin.setEnabled(true);
-                  })),
+                //margin: const EdgeInsets.all(textFieldMargin),
+                child: ElevatedButton(
+                    style: bwBtnStyle,
+                    child: const Text('Enable Wifi'),
+                    onPressed: () async {
+                      await WiFiForIoTPlugin.setEnabled(true);
+                    })),
           ]));
 
   Widget _buildConnect(BuildContext ctx) {
-    return Column(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -337,10 +344,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       //_showSnackBar(ctx, info);
                       bool success = await loginToWIFI(username, password);
                       if (success) {
-                        _showSnackBar(ctx, info+'Success');
+                        _showSnackBar(ctx, info + 'Success');
                         break outer; // break outer loop which breaks both loops.
                       } else
-                        _showSnackBar(ctx, info+'Error');
+                        _showSnackBar(ctx, info + 'Error');
                     }
                   }
                 },
@@ -366,12 +373,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   //Widget _buildOutputText() {
-  //  return 
+  //  return
   //}
 
   void _showSnackBar(BuildContext ctx, String msg) {
     final scaffold = ScaffoldMessenger.of(ctx);
-    scaffold.showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 1)));
+    scaffold.showSnackBar(
+        SnackBar(content: Text(msg), duration: const Duration(seconds: 1)));
   }
 }
 
