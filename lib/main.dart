@@ -8,7 +8,7 @@ import 'package:wifi_iot/wifi_iot.dart';
 //const String LOGOUT_URL = 'http://1.1.1.1';
 const String LOGOUT_URL =
     'http://gateway.example.com/loginpages/autologout.shtml';
-const String URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
+const String LOGIN_URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
 const Map<String, String> PARAMS = {'accesscode': '', 'vlan_id': '106'};
 
 /* used builtin class instead of lib:http.dart cuz it doesn't provide history of
@@ -26,8 +26,8 @@ class Session {
   }
 
   void close([HttpClientResponse? response]) {
-    client.close(force: true);
     response?.drain();
+    client.close(force: true);
   }
 
   Future<HttpClientResponse> get(String url) async {
@@ -59,12 +59,22 @@ class Session {
       request.headers.set(name, value);
     });
     request.headers.set(HttpHeaders.contentTypeHeader, 'x-www-form-urlencoded');
-    // write body
+    // requests is chunked by default. disable it. then provide content length too.
+    request.headers.chunkedTransferEncoding = false;
+
+    // prepare urlencoded body
     List<String> forms = [];
     if (body != null)
       body.forEach((String k, String v) =>
           forms.add(Uri.encodeComponent(k) + '=' + Uri.encodeComponent(v)));
-    request.write(forms.join('&'));
+    String requestBody = forms.join('&');
+    // manually provide content-length cuz chunked transfer is disabled
+    request.contentLength = requestBody.length;
+
+    // write to body
+    request.write(requestBody);
+    print('URL: ' + url);
+    print('BODY: ' + requestBody);
     // send the request and wait for a response
     HttpClientResponse response = await request.close();
     return response;
@@ -92,7 +102,7 @@ Future<bool> loginToWIFI(String username, String password) async {
     Session sess = Session();
     HttpClientResponse? resp;
     try {
-      resp = await sess.post(URL, body: params);
+      resp = await sess.post(LOGIN_URL, body: params);
     } finally {
       sess.close(resp);
     }
