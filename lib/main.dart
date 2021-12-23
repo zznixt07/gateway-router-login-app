@@ -58,7 +58,7 @@ class Session {
     headers.forEach((String name, String value) {
       request.headers.set(name, value);
     });
-    request.headers.set(HttpHeaders.contentTypeHeader, 'x-www-form-urlencoded');
+    request.headers.set(HttpHeaders.contentTypeHeader, 'application/x-www-form-urlencoded');
     // requests is chunked by default. disable it. then provide content length too.
     request.headers.chunkedTransferEncoding = false;
 
