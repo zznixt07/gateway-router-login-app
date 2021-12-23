@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
+const String LOGIN_URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
+const String LOGIN_FAIL_PATH = 'error_user.shtml';
 //const String LOGOUT_URL = 'http://1.1.1.1';
 const String LOGOUT_URL =
     'http://gateway.example.com/loginpages/autologout.shtml';
-const String LOGIN_URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
+const String LOGOUT_FAIL_URL = 'gateway.example.com/loginpages/autologout.shtml';
 const Map<String, String> PARAMS = {'accesscode': '', 'vlan_id': '106'};
 
 /* used builtin class instead of lib:http.dart cuz it doesn't provide history of
@@ -106,10 +108,18 @@ Future<bool> loginToWIFI(String username, String password) async {
     } finally {
       sess.close(resp);
     }
+    // even tho response is closed/drained. it can still be read.
     for (RedirectInfo redirect in resp.redirects) {
       String locHeader = redirect.location.toString();
-      if (locHeader.startsWith('error_user.shtml')) return false;
+      print('LOCATION: ${locHeader}');
+      if (locHeader.startsWith(LOGIN_FAIL_PATH)) return false;
     }
+    // HttpClient doesn't seem to redirect even on 302. check location header again.
+    String? locHeader = resp.headers.value(HttpHeaders.locationHeader);
+    if (locHeader != null) {
+      if (locHeader.startsWith(LOGIN_FAIL_PATH)) return false;
+    }
+
     return true;
   } catch (e) {}
   return false;
@@ -127,8 +137,7 @@ Future<bool> logoutOfWifi() async {
 
     for (RedirectInfo redirect in resp.redirects) {
       String locHeader = redirect.location.toString();
-      if (locHeader.startsWith(
-          'gateway.example.com/loginpages/autologout.shtml')) return true;
+      if (locHeader.startsWith(LOGOUT_FAIL_URL)) return true;
     }
     return true;
   } catch (e) {}
