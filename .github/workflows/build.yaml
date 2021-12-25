@@ -41,6 +41,8 @@ jobs:
 
       # - name: Run tests
       #   run: flutter test
+      - name: Create splash screen
+        run: flutter pub run flutter_native_splash:create
 
       - name: Build apk
         if: ${{ runner.os == 'Linux' }}
