@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:connstw/models/release/asset.dart';
+import 'package:connstw/models/release/release.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'session.dart' show Session;
 
 
 const String LOGIN_URL = 'http://gateway.example.com/loginpages/userlogin.shtml';
 const String LOGIN_FAIL_PATH = 'error_user.shtml';
-//const String LOGOUT_URL = 'http://1.1.1.1';
+//const String LOGOUT_URL = 'http://1.1.1.1';sme
 const String LOGOUT_URL =
     'http://gateway.example.com/loginpages/autologout.shtml';
 const String LOGOUT_FAIL_URL = 'gateway.example.com/loginpages/autologout.shtml';
@@ -61,6 +63,41 @@ Future<bool> logoutOfWIFI() async {
     return true;
   } catch (e) {}
   return false;
+}
+
+
+Future<BasicRelease?> latestGHRelease(String repoName) async {
+  String originReleaseUrl = 'https://api.github.com/repos/$repoName/releases/latest';
+  String? contents;
+  Session sess = Session();
+  try {
+    contents = await sess.getAndText(originReleaseUrl);
+  }
+  catch (e) {}
+  finally {
+    sess.close();
+  }
+  if (contents != null) {
+    Release release = Release.fromJson(jsonDecode(contents));
+    String? tag = release.tagName;
+    String? url;
+    for (Asset asset in release.assets) {
+      if (asset.contentType == 'application/vnd.android.package-archive') {
+        url = asset.browserDownloadUrl;
+        break;
+      }
+    }
+    if (tag != null && url != null) {
+      return BasicRelease(tag, Uri.parse(url));
+    }
+  }
+  return null;
+}
+
+class BasicRelease {
+  late final String tag;
+  late final Uri downloadUrl;
+  BasicRelease(this.tag, this.downloadUrl);
 }
 
 class LocalStore {
