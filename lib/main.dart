@@ -3,15 +3,32 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+import 'package:flash/flash.dart';
 import 'session.dart' show Session;
-import 'utils.dart' show loginToWIFI, logoutOfWIFI, LocalStore;
+import 'utils.dart'
+    show
+        loginToWIFI,
+        logoutOfWIFI,
+        LocalStore,
+        getAppVer,
+        latestGHRelease,
+        BasicRelease;
 
+const String ORIGIN_REPO = 'zznixt07/gateway-router-login-app';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    getAppVer().then((String currVer) async {
+        BasicRelease? release = await latestGHRelease(ORIGIN_REPO);
+        if (release != null) {
+          print('release found');
+        }
+        print(currVer);
+
+      });
     return MaterialApp(title: 'Quick Connect', home: MyHomePage());
   }
 }
@@ -230,7 +247,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             bgcolor: Colors.green.shade900);
                         break outer; // break outer loop which breaks both loops.
                       } else
-                        _showSnackBar(ctx, 'Error: ${info}', bgcolor: Colors.grey.shade900);
+                        _showSnackBar(ctx, 'Error: ${info}',
+                            bgcolor: Colors.grey.shade900);
                     }
                   }
                 },
@@ -248,9 +266,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   print('logging out');
                   bool success = await logoutOfWIFI();
                   if (success)
-                    _showSnackBar(ctx, 'Logout Success', bgcolor: Colors.green.shade900);
+                    _showSnackBar(ctx, 'Logout Success',
+                        bgcolor: Colors.green.shade900);
                   else
-                    _showSnackBar(ctx, 'Logout failed', bgcolor: Colors.grey.shade900);
+                    _showSnackBar(ctx, 'Logout failed',
+                        bgcolor: Colors.grey.shade900);
                 },
                 child: const MyText('Logout'))));
   }

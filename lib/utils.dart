@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:connstw/models/release/asset.dart';
 import 'package:connstw/models/release/release.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'session.dart' show Session;
 
 
@@ -65,6 +66,10 @@ Future<bool> logoutOfWIFI() async {
   return false;
 }
 
+Future<String> getAppVer() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  return packageInfo.version;
+}
 
 Future<BasicRelease?> latestGHRelease(String repoName) async {
   String originReleaseUrl = 'https://api.github.com/repos/$repoName/releases/latest';
@@ -72,6 +77,7 @@ Future<BasicRelease?> latestGHRelease(String repoName) async {
   Session sess = Session();
   try {
     contents = await sess.getAndText(originReleaseUrl);
+    //print(contents);
   }
   catch (e) {}
   finally {
@@ -81,22 +87,25 @@ Future<BasicRelease?> latestGHRelease(String repoName) async {
     Release release = Release.fromJson(jsonDecode(contents));
     String? tag = release.tagName;
     String? url;
-    for (Asset asset in release.assets) {
-      if (asset.contentType == 'application/vnd.android.package-archive') {
-        url = asset.browserDownloadUrl;
-        break;
+    List<Asset>? assets = release.assets;
+    if (assets != null) {
+      for (Asset asset in assets) {
+        if (asset.contentType == 'application/vnd.android.package-archive') {
+          url = asset.browserDownloadUrl;
+          break;
+        }
       }
-    }
-    if (tag != null && url != null) {
-      return BasicRelease(tag, Uri.parse(url));
+      if (tag != null && url != null) {
+        return BasicRelease(tag, Uri.parse(url));
+      }
     }
   }
   return null;
 }
 
 class BasicRelease {
-  late final String tag;
-  late final Uri downloadUrl;
+  final String tag;
+  final Uri downloadUrl;
   BasicRelease(this.tag, this.downloadUrl);
 }
 

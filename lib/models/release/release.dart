@@ -29,7 +29,7 @@ class Release {
 	DateTime? createdAt;
 	@JsonKey(name: 'published_at') 
 	DateTime? publishedAt;
-	List<Asset> assets = [];
+	List<Asset>? assets;
 	@JsonKey(name: 'tarball_url') 
 	String? tarballUrl;
 	@JsonKey(name: 'zipball_url') 

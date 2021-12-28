@@ -27,8 +27,8 @@ Release _$ReleaseFromJson(Map<String, dynamic> json) => Release(
       publishedAt: json['published_at'] == null
           ? null
           : DateTime.parse(json['published_at'] as String),
-      assets: (json['assets'] as List<dynamic>)
-          .map((e) => Asset.fromJson(e as Map<String, dynamic>))
+      assets: (json['assets'] as List<dynamic>?)
+          ?.map((e) => Asset.fromJson(e as Map<String, dynamic>))
           .toList(),
       tarballUrl: json['tarball_url'] as String?,
       zipballUrl: json['zipball_url'] as String?,

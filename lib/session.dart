@@ -37,7 +37,10 @@ class Session {
     HttpClientResponse response = await get(url);
     await response
         .transform(utf8.decoder)
-        .listen((String contents) => body = contents)
+        .listen((String contents) {
+            // comes in stream. hence append.
+            body += contents;
+        })
         .asFuture();
     return body;
   }
@@ -77,7 +80,9 @@ class Session {
     HttpClientResponse response = await post(url, body: body);
     await response
         .transform(utf8.decoder)
-        .listen((String contents) => responseBody = contents)
+        .listen((String contents) {
+          responseBody += contents;
+        })
         .asFuture();
     return responseBody;
   }
