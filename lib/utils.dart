@@ -66,6 +66,21 @@ Future<bool> logoutOfWIFI() async {
   return false;
 }
 
+int versionToInt(String ver) {
+  const int defValue = -1;
+  if (ver == '') return defValue;
+  // strip char v if present
+  if (ver.startsWith('v')) ver = ver.substring(1);
+  // first split on + if version string is in format 1.3.2+edfdf
+  String significantString = ver.split('+')[0];
+
+  // then split on dot
+  List<String> undotted = significantString.split('.');
+
+  // join and try converting to int
+  return int.tryParse(undotted.join(''), radix: 10) ?? defValue;
+}
+
 Future<String> getAppVer() async {
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   return packageInfo.version;

@@ -12,7 +12,8 @@ import 'utils.dart'
         LocalStore,
         getAppVer,
         latestGHRelease,
-        BasicRelease;
+        BasicRelease,
+        versionToInt;
 
 const String ORIGIN_REPO = 'zznixt07/gateway-router-login-app';
 
@@ -25,9 +26,10 @@ class MyApp extends StatelessWidget {
         BasicRelease? release = await latestGHRelease(ORIGIN_REPO);
         if (release != null) {
           print('release found');
+          if (versionToInt(release.tag) > versionToInt(currVer)) {
+            print('new update available from ' + release.downloadUrl.toString());
+          }
         }
-        print(currVer);
-
       });
     return MaterialApp(title: 'Quick Connect', home: MyHomePage());
   }
