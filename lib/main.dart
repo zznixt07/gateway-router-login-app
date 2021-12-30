@@ -6,6 +6,7 @@ import 'package:wifi_iot/wifi_iot.dart';
 import 'package:flash/flash.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'session.dart' show Session;
+import './screens/log_screen.dart';
 import 'utils.dart'
     show
         loginToWIFI,
@@ -38,6 +39,7 @@ class MyText extends Text {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool checkForUpdates = LocalStore.getBool('_checkUpdates') ?? true;
   // these are used as key for k-v db store.
   static const usernameFieldLabel = 'Username';
   static const passwordFieldLabel = 'Password';
@@ -70,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     _usernameController.addListener(() {});
     _passwordController.addListener(() {});
-    _checkUpdates();
+    if (checkForUpdates) _checkUpdates();
   }
 
   @override
@@ -87,9 +89,27 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const MyText('🚀...'),
         backgroundColor: Colors.black,
       ),
+      endDrawer: Drawer(child: _buildDrawer(context)),
       body: _buildBody(context),
     );
   }
+
+  Widget _buildDrawer(BuildContext context) =>
+      ListView(padding: EdgeInsets.zero, children: <Widget>[
+        DrawerHeader(
+            decoration: BoxDecoration(color: Colors.blue),
+            child: Text('Drawer Head')),
+        ListTile(
+            leading: Icon(Icons.message),
+            onTap: () {
+              // close the drawer first
+              Navigator.pop(context);
+
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => LogScreen()));
+            },
+            title: Text('Logs')),
+      ]);
 
   Widget _buildBody(BuildContext context) {
     return SingleChildScrollView(

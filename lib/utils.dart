@@ -151,4 +151,12 @@ class LocalStore {
     print('getting list with key: ${ukey + key}');
     return _prefs?.getStringList(ukey + key);
   }
+
+  static setBool(String key, bool val) {
+    return _prefs?.setBool(ukey + key, val);
+  }
+
+  static getBool(String key) {
+    return _prefs?.getBool(ukey + key);
+  }
 }
