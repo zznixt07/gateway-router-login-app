@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:flash/flash.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'session.dart' show Session;
 import 'utils.dart'
     show
@@ -22,15 +23,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    getAppVer().then((String currVer) async {
-        BasicRelease? release = await latestGHRelease(ORIGIN_REPO);
-        if (release != null) {
-          print('release found');
-          if (versionToInt(release.tag) > versionToInt(currVer)) {
-            print('new update available from ' + release.downloadUrl.toString());
-          }
-        }
-      });
     return MaterialApp(title: 'Quick Connect', home: MyHomePage());
   }
 }
@@ -78,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     _usernameController.addListener(() {});
     _passwordController.addListener(() {});
+    _checkUpdates();
   }
 
   @override
@@ -282,12 +275,50 @@ class _MyHomePageState extends State<MyHomePage> {
   //}
 
   void _showSnackBar(BuildContext ctx, String msg,
-      {Color bgcolor = Colors.transparent}) {
+      {Color bgcolor = Colors.transparent, int duration = 1}) {
     final scaffold = ScaffoldMessenger.of(ctx);
     scaffold.showSnackBar(SnackBar(
         backgroundColor: bgcolor,
         content: Text(msg),
-        duration: const Duration(seconds: 1)));
+        duration: Duration(seconds: duration)));
+  }
+
+  Future<void> _checkUpdates() async {
+    String currVer = await getAppVer();
+    BasicRelease? release = await latestGHRelease(ORIGIN_REPO);
+    if (release == null) return;
+    print('release found');
+    String originVer = release.tag;
+    String url = release.downloadUrl.toString();
+    if (versionToInt(originVer) > versionToInt(currVer)) {
+      print('new update available from $url');
+      context.showFlashDialog(
+          persistent: true,
+          title: const Text('Update available'),
+          content: Text(
+              'A new version of the app is available. Upgrade from v$currVer to $originVer?'),
+          negativeActionBuilder: (context, controller, _) {
+            return TextButton(
+              onPressed: () {
+                controller.dismiss();
+              },
+              child: Text('No'),
+            );
+          },
+          positiveActionBuilder: (context, controller, _) {
+            return TextButton(
+                onPressed: () async {
+                  bool launched = await url_launcher.launch(url);
+                  if (!launched) {
+                    print('Cannot launch url: $url');
+                    _showSnackBar(context, 'Cannot launch url: $url',
+                        bgcolor: Colors.black, duration: 2);
+                  }
+                  controller.dismiss();
+                },
+                child: Text('Yes'));
+          });
+    }
   }
 }
 
