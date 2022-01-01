@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // mixin syntax
+import 'package:provider/provider.dart';
 
-class LogScreen extends StatefulWidget {
-  @override
-  _LogScreenState createState() => _LogScreenState();
+
+class LogStore with ChangeNotifier {
+  String output = '';
+
+  void appendLn(String text) {
+    output += text + '\n';
+    notifyListeners();
+  }
+
 }
 
-class MyText extends Text {
-  const MyText(String text)
-      : super(text, style: const TextStyle(fontSize: 24.0));
-}
-
-class _LogScreenState extends State<LogScreen> {
+class LogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const MyText('🚀...'),
-        backgroundColor: Colors.black,
-      ),
-      body: _buildOutputText(),
+    return SafeArea(
+      child: Scaffold(
+        body: _buildOutputText(context),
+      )
     );
   }
 
-
-  Widget _buildOutputText() {
-    return Text('hi');
+  Widget _buildOutputText(BuildContext context) {
+    final logged = Provider.of<LogStore>(context).output;
+    return Text(logged);
   }
 
 }

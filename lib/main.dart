@@ -5,8 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:flash/flash.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:provider/provider.dart';
 import 'session.dart' show Session;
-import './screens/log_screen.dart';
+import 'screens/log_screen.dart';
+import 'debug.dart';
 import 'utils.dart'
     show
         loginToWIFI,
@@ -18,13 +20,17 @@ import 'utils.dart'
         versionToInt;
 
 const String ORIGIN_REPO = 'zznixt07/gateway-router-login-app';
+final LogStore logstore = LogStore();
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'Quick Connect', home: MyHomePage());
+    return MaterialApp(
+        title: 'Quick Connect',
+        home: ChangeNotifierProvider<LogStore>(
+            create: (context) => logstore, child: MyHomePage()));
   }
 }
 
@@ -73,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _usernameController.addListener(() {});
     _passwordController.addListener(() {});
     if (checkForUpdates) _checkUpdates();
+    debug.init(context.read);
   }
 
   @override
@@ -84,14 +91,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return (SafeArea(
+        child: Scaffold(
       appBar: AppBar(
         title: const MyText('🚀...'),
         backgroundColor: Colors.black,
       ),
       endDrawer: Drawer(child: _buildDrawer(context)),
       body: _buildBody(context),
-    );
+    )));
   }
 
   Widget _buildDrawer(BuildContext context) =>
@@ -105,8 +113,12 @@ class _MyHomePageState extends State<MyHomePage> {
               // close the drawer first
               Navigator.pop(context);
 
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => LogScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ChangeNotifierProvider<LogStore>.value(
+                              value: logstore, child: LogScreen())));
             },
             title: Text('Logs')),
       ]);
@@ -122,7 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _buildTips(),
         _buildConnect(context),
         _buildLoginLogoutButtons(context),
-        //_buildOutputText(),
       ],
     )));
   }
@@ -149,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     })),
           ]));
 
-  Widget _buildConnect(BuildContext ctx) {
+  Widget _buildConnect(BuildContext context) {
     return Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,13 +176,16 @@ class _MyHomePageState extends State<MyHomePage> {
         ]);
   }
 
-  Widget _buildLoginLogoutButtons(BuildContext ctx) {
+  Widget _buildLoginLogoutButtons(BuildContext context) {
     return Container(
         margin: const EdgeInsets.symmetric(vertical: 30.0),
         child: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [_buildLoginButton(ctx), _buildLogoutButton(ctx)])));
+                children: [
+              _buildLoginButton(context),
+              _buildLogoutButton(context)
+            ])));
   }
 
   Widget _textChip(String text, LinkedHashSet<String> chips) {
@@ -229,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: widgets);
   }
 
-  Widget _buildLoginButton(BuildContext ctx) {
+  Widget _buildLoginButton(BuildContext context) {
     return Container(
         margin: const EdgeInsets.symmetric(vertical: 6.0),
         child: Center(
@@ -255,14 +269,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   for (String username in _usernames) {
                     for (String password in _passwords) {
                       String info = 'Trying ${username}, ${password}';
-                      //_showSnackBar(ctx, info);
+                      //_showSnackBar(context, info);
                       bool success = await loginToWIFI(username, password);
                       if (success) {
-                        _showSnackBar(ctx, 'Success: ${info}',
+                        _showSnackBar(context, 'Success: ${info}',
                             bgcolor: Colors.green.shade900);
                         break outer; // break outer loop which breaks both loops.
                       } else
-                        _showSnackBar(ctx, 'Error: ${info}',
+                        _showSnackBar(context, 'Error: ${info}',
                             bgcolor: Colors.grey.shade900);
                     }
                   }
@@ -271,32 +285,30 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const MyText('  Login  '))));
   }
 
-  Widget _buildLogoutButton(BuildContext ctx) {
+  Widget _buildLogoutButton(BuildContext context) {
+    //final LogStore logClass = Provider.of<LogStore>(context, listen: false);
+    //final LogStore logClass = context.read<LogStore>();
     return Container(
         margin: const EdgeInsets.symmetric(vertical: 6.0),
         child: Center(
             child: ElevatedButton(
                 style: dangerousBtnStyle,
                 onPressed: () async {
-                  print('logging out');
+                  debug('logging out');
                   bool success = await logoutOfWIFI();
                   if (success)
-                    _showSnackBar(ctx, 'Logout Success',
+                    _showSnackBar(context, 'Logout Success',
                         bgcolor: Colors.green.shade900);
                   else
-                    _showSnackBar(ctx, 'Logout failed',
+                    _showSnackBar(context, 'Logout failed',
                         bgcolor: Colors.grey.shade900);
                 },
                 child: const MyText('Logout'))));
   }
 
-  //Widget _buildOutputText() {
-  //  return
-  //}
-
-  void _showSnackBar(BuildContext ctx, String msg,
+  void _showSnackBar(BuildContext context, String msg,
       {Color bgcolor = Colors.transparent, int duration = 1}) {
-    final scaffold = ScaffoldMessenger.of(ctx);
+    final scaffold = ScaffoldMessenger.of(context);
     scaffold.showSnackBar(SnackBar(
         backgroundColor: bgcolor,
         content: Text(msg),
@@ -307,11 +319,11 @@ class _MyHomePageState extends State<MyHomePage> {
     String currVer = await getAppVer();
     BasicRelease? release = await latestGHRelease(ORIGIN_REPO);
     if (release == null) return;
-    print('release found');
+    debug('release found');
     String originVer = release.tag;
     String url = release.downloadUrl.toString();
     if (versionToInt(originVer) > versionToInt(currVer)) {
-      print('new update available from $url');
+      debug('new update available from $url');
       context.showFlashDialog(
           persistent: true,
           title: const Text('Update available'),
@@ -330,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () async {
                   bool launched = await url_launcher.launch(url);
                   if (!launched) {
-                    print('Cannot launch url: $url');
+                    debug('Cannot launch url: $url');
                     _showSnackBar(context, 'Cannot launch url: $url',
                         bgcolor: Colors.black, duration: 2);
                   }

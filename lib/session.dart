@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
+import './debug.dart';
+
 
 /* used builtin class instead of lib:http.dart cuz it doesn't provide history of
   redirects. Location header is used to figure out whether the login/logout was
@@ -23,6 +25,7 @@ class Session {
 
   Future<HttpClientResponse> get(String url) async {
     // warning: always read the returned response or .drain() to prevent memory leaks.
+    debug('GET: $url');
     HttpClientRequest request = await client.getUrl(Uri.parse(url));
     headers.forEach((String name, String value) {
       request.headers.set(name, value);
@@ -47,6 +50,8 @@ class Session {
 
   Future<HttpClientResponse> post(String url,
       {Map<String, String>? body: null}) async {
+    debug('POST: $url');
+    debug('BODY: $body');
     // warning: always read the returned response or .drain() to prevent memory leaks.
     HttpClientRequest request = await client.postUrl(Uri.parse(url));
     headers.forEach((String name, String value) {
@@ -62,6 +67,7 @@ class Session {
       body.forEach((String k, String v) =>
           forms.add(Uri.encodeComponent(k) + '=' + Uri.encodeComponent(v)));
     String requestBody = forms.join('&');
+    debug('BODY(encoded): $requestBody');
     // manually provide content-length cuz chunked transfer is disabled
     request.contentLength = requestBody.length;
 
