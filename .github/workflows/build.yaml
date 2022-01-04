@@ -41,6 +41,10 @@ jobs:
 
       # - name: Run tests
       #   run: flutter test
+
+      - name: Create launcher icon
+        run: flutter pub run flutter_launcher_icons:main
+
       - name: Create splash screen
         run: flutter pub run flutter_native_splash:create
 
